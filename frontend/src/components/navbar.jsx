@@ -25,7 +25,8 @@ const Navbar = ({ selectedProject, projects, dropdownOpen, setDropdownOpen, setS
           onClick={() => setDropdownOpen(!dropdownOpen)}
           className="bg-green-600 text-white px-4 py-2 rounded flex justify-between items-center w-48"
         >
-          {selectedProject.name}
+          {/* Check if selectedProject is not null before accessing name */}
+          {selectedProject ? selectedProject.project_name : 'Select a Project'}
           <span className="ml-2">&#x25BC;</span>
         </button>
         {dropdownOpen && (
@@ -40,7 +41,7 @@ const Navbar = ({ selectedProject, projects, dropdownOpen, setDropdownOpen, setS
                     setDropdownOpen(false);
                   }}
                 >
-                  {project.name}
+                  {project.project_name}
                 </li>
               ))}
             </ul>

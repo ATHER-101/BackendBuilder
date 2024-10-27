@@ -7,6 +7,8 @@ const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
 
+const {updateDatabase} = require('../database');
+
 async function generateAIResponse(prompt) {
     const genAI = new GoogleGenerativeAI("AIzaSyBjevwoUgz9l3yfAfX6w7vEvaLlARk6TVY");
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
@@ -26,7 +28,8 @@ router.get('/', async (req, res) => {
     const token = process.env.GITHUB_TOKEN;
     const repoUrl = `https://${token}:x-oauth-basic@github.com/ATHER-101/Builder.git`;
     const destinationPath = 'Builder';
-    const fileName = '01.js';
+    const userName = req.query.user;
+    const fileName = `${req.query.project}.js`;
     const newContent = ai_res.response.candidates[0].content.parts[0].text;
     const cleanedContent = newContent.replace(/```javascript|```/g, '').trim();
 
@@ -48,7 +51,7 @@ router.get('/', async (req, res) => {
 
     git.cwd(destinationPath);
 
-    const filePath = path.join(fullPath, 'routes/1234', fileName);
+    const filePath = path.join(fullPath, 'routes',userName, fileName);
 
     try {
         // Read existing content of 01.js
@@ -65,6 +68,11 @@ router.get('/', async (req, res) => {
         console.error("Error writing file:", writeError);
         return res.status(500).json({ error: 'Failed to write file' });
     }
+
+    const endpoint_name = req.body.endpoint_name;
+    const method = req.body.method.toUpperCase();
+    const endpoint = { endpoint_name, method };
+    updateDatabase(userName, req.query.project, endpoint);
 
     // Add, commit, and push the changes to GitHub
     try {
