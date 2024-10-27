@@ -19,7 +19,7 @@ const Navbar = ({ selectedProject, projects, dropdownOpen, setDropdownOpen, setS
 
   return (
     <nav className="bg-white shadow-lg py-2 px-6 flex justify-between items-center">
-      <div className="text-xl font-bold text-green-600">My Projects</div>
+      <div className="text-xl font-bold text-green-600">BackendBuddy.</div>
       <div className="relative" ref={dropdownRef}>
         <button
           onClick={() => setDropdownOpen(!dropdownOpen)}

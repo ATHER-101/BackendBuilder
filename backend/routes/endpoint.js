@@ -22,7 +22,9 @@ async function generateAIResponse(prompt) {
 }
 
 // Define your routes here
-router.get('/', async (req, res) => {
+router.post('/', async (req, res) => {
+    console.log(req.body)
+    console.log(req.query)
     const ai_res = await generateAIResponse(prompt + JSON.stringify(req.body));
 
     const token = process.env.GITHUB_TOKEN;

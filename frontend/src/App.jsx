@@ -36,23 +36,63 @@ function App() {
     fetchProjects();
   }, []);
 
-  const createRoute = async() => {
+  // Create a new project
+  const createProject = async () => {
+    if (!newProjectName) return; // Prevent creation if the name is empty
+
+    try {
+      // Call the API to create the new project
+      await axios.get(`http://localhost:3000/add-project?project=${newProjectName}&user=2345`);
+
+      // If the API call is successful, update the local state
+      const newProject = { project_name: newProjectName, endpoints: [] };
+      setProjects([...projects, newProject]);
+      setSelectedProject(newProject);
+      setNewProjectName('');
+      setIsCreatingProject(false);
+    } catch (error) {
+      console.error('Error creating project:', error);
+    }
+  };
+
+  const createRoute = async () => {
+    let parsedResponse;
+
+    try {
+      // Attempt to parse the `newRoute.response` as JSON
+      parsedResponse = JSON.parse(newRoute.response);
+    } catch (error) {
+      console.error("Invalid JSON format for the expected response:", error);
+      return;
+    }
+
     const updatedProject = {
       ...selectedProject,
-      endpoints: [...selectedProject.endpoints, { endpoint_name:newRoute.endpoint,method: newRoute.method }],
+      endpoints: [...selectedProject.endpoints, { endpoint_name: newRoute.endpoint, method: newRoute.method }],
     };
 
     try {
-      const response = await axios.get('http://localhost:3000/add-endpoint?project=test1&user=2345');
+      const response = await axios.post(
+        `http://localhost:3000/add-endpoint?project=${selectedProject.project_name}&user=2345`,
+        {
+          endpoint_name: newRoute.endpoint,
+          method: newRoute.method,
+          ...parsedResponse
+        }
+      );
+
+      console.log(response.data);
+
+      setProjects((prevProjects) =>
+        prevProjects.map((project) =>
+          project.project_name === selectedProject.project_name ? updatedProject : project
+        )
+      );
+
     } catch (error) {
-      console.log(error)
+      console.error('Error creating route:', error);
     }
 
-    setProjects((prevProjects) =>
-      prevProjects.map((project) =>
-        project.project_name === selectedProject.project_name ? updatedProject : project
-      )
-    );
     setSelectedProject(updatedProject);
     setNewRoute({ method: 'GET', endpoint: '', response: '' });
     setIsCreatingRoute(false);
@@ -160,12 +200,41 @@ function App() {
                 <h2 className="text-lg font-bold mb-4">Endpoint Details</h2>
                 <p><strong>Method:</strong> {selectedEndpoint.method}</p>
                 <p><strong>Endpoint Name:</strong> {selectedEndpoint.endpoint_name}</p>
-                {/* Add any additional details as needed */}
+                <p><strong>Endpoint Link:</strong>
+                  <a href={`https://builder-nz8k.onrender.com/2345/${selectedProject.project_name}/${selectedEndpoint.endpoint_name}`} target="_blank" rel="noopener noreferrer" className='pl-2'>
+                  {`https://builder-nz8k.onrender.com/2345/${selectedProject.project_name}/${selectedEndpoint.endpoint_name}`}
+                  </a>
+                </p>
               </div>
             )
           )}
         </div>
       </div>
+
+      {/* Modal for Creating Project */}
+      {isCreatingProject && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded shadow-lg w-1/3">
+            <h2 className="text-lg font-bold mb-4">Create New Project</h2>
+            <input
+              type="text"
+              placeholder="Project Name"
+              className="border p-2 w-full mb-4 rounded"
+              value={newProjectName}
+              onChange={(e) => setNewProjectName(e.target.value)}
+            />
+            <div className="flex justify-end">
+              <button className="bg-gray-300 text-black px-4 py-2 rounded mr-2" onClick={() => setIsCreatingProject(false)}>
+                Cancel
+              </button>
+              <button className="bg-green-600 text-white px-4 py-2 rounded" onClick={createProject}>
+                Create
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
     </>
   );
 }
