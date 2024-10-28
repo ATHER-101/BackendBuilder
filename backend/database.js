@@ -15,8 +15,8 @@ const writeDatabase = (data) => {
     fs.writeFileSync(dbPath, JSON.stringify(data, null, 2), 'utf8');
 };
 
-// Add or update user, project, or endpoint in the database
-const updateDatabase = (user, projectName, endpoint = null) => {
+// Add or update user, project, or endpoint in the database, and optionally add database info
+const updateDatabase = (user, projectName, endpoint = null, database = null) => {
     const dbData = readDatabase();
 
     // Find user by ID
@@ -42,8 +42,38 @@ const updateDatabase = (user, projectName, endpoint = null) => {
         projectData.endpoints.push(endpoint);
     }
 
+    // If database info is provided, add or update the database details for the project
+    if (database) {
+        projectData.database = database;
+    }
+
     // Write the updated data back to the JSON file
     writeDatabase(dbData);
 };
 
-module.exports = { updateDatabase };
+// Function to get database details by user and project
+const getDatabaseDetails = (user, projectName) => {
+    const dbData = readDatabase();
+
+    // Find user by ID
+    const userData = dbData.find(u => u.user === user);
+    if (!userData) {
+        throw new Error(`User with ID ${user} not found.`);
+    }
+
+    // Find project by name under the user
+    const projectData = userData.projects.find(p => p.project_name === projectName);
+    if (!projectData) {
+        throw new Error(`Project with name ${projectName} not found for user ${user}.`);
+    }
+
+    // Check if the project has database details
+    if (!projectData.database) {
+        throw new Error(`No database details found for project ${projectName} of user ${user}.`);
+    }
+
+    // Return the database details
+    return projectData.database;
+};
+
+module.exports = { updateDatabase, getDatabaseDetails };

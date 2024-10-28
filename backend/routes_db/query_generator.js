@@ -3,21 +3,11 @@ const router = express.Router();
 const { Pool } = require('pg');
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-// Initialize the GoogleGenerativeAI client
-const genAI = new GoogleGenerativeAI("AIzaSyBjevwoUgz9l3yfAfX6w7vEvaLlARk6TVY"); 
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const { getDatabaseDetails } = require('../database');
 
-// Database connection pool configuration
-const pool = new Pool({
-    host: 'localhost',
-    port: 5432,
-    user: 'postgres',
-    password: 'G4Z1,-/j>[4i',
-    database: 'postgres',
-    max: 20, // Maximum number of clients in the pool
-    idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-    connectionTimeoutMillis: 2000, // Return an error after 2 seconds if no connection is available
-});
+// Initialize the GoogleGenerativeAI client
+const genAI = new GoogleGenerativeAI("AIzaSyBjevwoUgz9l3yfAfX6w7vEvaLlARk6TVY");
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 // Function to generate SQL query using AI
 async function generateSqlQuery(input) {
@@ -49,9 +39,19 @@ async function generateSqlQuery(input) {
 }
 
 // Route for table creation
-router.get('/', async (req, res) => {  // Change GET to POST
+router.post('/', async (req, res) => {  // Change GET to POST
     const userInput = req.body;
 
+    const db_details = getDatabaseDetails(req.query.user, req.query.project);
+    const pool = new Pool({
+        ...db_details,
+        max: 20, // Maximum number of clients in the pool
+        idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
+        connectionTimeoutMillis: 2000, // Return an error after 2 seconds if no connection is available
+        ssl: {
+            rejectUnauthorized: false,
+        },
+    });
     let client;
 
     try {

@@ -15,11 +15,20 @@ function App() {
     response: '',
   });
   const [selectedEndpoint, setSelectedEndpoint] = useState(null);
+  const [isConnectingDatabase, setIsConnectingDatabase] = useState(false);
+  const [databaseDetails, setDatabaseDetails] = useState({
+    host: '',
+    port: '',
+    user: '',
+    password: '',
+    database: '',
+  });
 
   const fetchProjects = async () => {
     try {
       const response = await axios.get('http://localhost:3000/data?user=2345');
       const fetchedProjects = response.data.projects;
+      console.log(fetchedProjects);
       setProjects(fetchedProjects);
       if (fetchedProjects.length > 0) {
         setSelectedProject(fetchedProjects[0]);
@@ -36,15 +45,12 @@ function App() {
     fetchProjects();
   }, []);
 
-  // Create a new project
   const createProject = async () => {
-    if (!newProjectName) return; // Prevent creation if the name is empty
+    if (!newProjectName) return;
 
     try {
-      // Call the API to create the new project
       await axios.get(`http://localhost:3000/add-project?project=${newProjectName}&user=2345`);
 
-      // If the API call is successful, update the local state
       const newProject = { project_name: newProjectName, endpoints: [] };
       setProjects([...projects, newProject]);
       setSelectedProject(newProject);
@@ -57,9 +63,7 @@ function App() {
 
   const createRoute = async () => {
     let parsedResponse;
-
     try {
-      // Attempt to parse the `newRoute.response` as JSON
       parsedResponse = JSON.parse(newRoute.response);
     } catch (error) {
       console.error("Invalid JSON format for the expected response:", error);
@@ -82,7 +86,6 @@ function App() {
       );
 
       console.log(response.data);
-
       setProjects((prevProjects) =>
         prevProjects.map((project) =>
           project.project_name === selectedProject.project_name ? updatedProject : project
@@ -98,16 +101,44 @@ function App() {
     setIsCreatingRoute(false);
   };
 
+  const connectDatabase = async () => {
+    try {
+      const response = await axios.post(
+        `http://localhost:3000/connect-db?project=${selectedProject.project_name}&user=2345`,
+        databaseDetails
+      );
+
+      console.log(response.data);
+
+      const updatedProject = {
+        ...selectedProject,
+        database: databaseDetails,
+      };
+
+      setProjects((prevProjects) =>
+        prevProjects.map((project) =>
+          project.project_name === selectedProject.project_name ? updatedProject : project
+        )
+      );
+
+      setSelectedProject(updatedProject);
+      setIsConnectingDatabase(false);
+    } catch (error) {
+      console.error('Error connecting database:', error);
+    }
+  };
+
   const handleRouteSelect = (endpoint) => {
     setSelectedEndpoint(endpoint);
-    setIsCreatingRoute(false); // Reset when selecting an endpoint
+    setIsCreatingRoute(false);
+    setIsConnectingDatabase(false);
   };
 
   const handleProjectSelect = (project) => {
     setSelectedProject(project);
     setSelectedEndpoint(project.endpoints[0] || null);
-    setIsCreatingRoute(false); // Reset when changing projects
-    setNewRoute({ method: 'GET', endpoint: '', response: '' }); // Clear form when changing projects
+    setIsCreatingRoute(false);
+    setNewRoute({ method: 'GET', endpoint: '', response: '' });
   };
 
   return (
@@ -140,24 +171,89 @@ function App() {
           </ul>
           <button
             className="bg-green-800 w-full mt-4 p-2 rounded"
-            onClick={() => setIsCreatingRoute(true)}
+            onClick={() => {
+              setIsCreatingRoute(true);
+              setIsConnectingDatabase(false);
+            }}
           >
             Create Route
           </button>
+
+          {/* Database Information */}
+          {selectedProject?.database ? (
+            <div className='bg-green-800 w-full mt-6 p-2 rounded text-left'>
+              <span className="font-bold">DB</span> - {selectedProject.database.database}
+            </div>
+          ) : (
+            <button
+              className="bg-green-800 w-full mt-6 p-2 rounded"
+              onClick={() => setIsConnectingDatabase(true)}
+            >
+              Connect Database
+            </button>
+          )}
         </div>
 
         {/* Main Content */}
-        <div className="flex-grow p-4">
-          {/* Endpoint Details or Route Creation Form */}
-          {isCreatingRoute ? (
+        <div className="w-4/5 p-4">
+          {isConnectingDatabase ? (
+            <div className="bg-white p-5 rounded shadow-lg">
+              <h2 className="text-lg font-bold mb-4">Connect Database</h2>
+              <input
+                type="text"
+                placeholder="Host"
+                className="border p-2 w-full mb-4 rounded"
+                value={databaseDetails.host}
+                onChange={(e) => setDatabaseDetails({ ...databaseDetails, host: e.target.value })}
+              />
+              <input
+                type="text"
+                placeholder="Port"
+                className="border p-2 w-full mb-4 rounded"
+                value={databaseDetails.port}
+                onChange={(e) => setDatabaseDetails({ ...databaseDetails, port: e.target.value })}
+              />
+              <input
+                type="text"
+                placeholder="User"
+                className="border p-2 w-full mb-4 rounded"
+                value={databaseDetails.user}
+                onChange={(e) => setDatabaseDetails({ ...databaseDetails, user: e.target.value })}
+              />
+              <input
+                type="password"
+                placeholder="Password"
+                className="border p-2 w-full mb-4 rounded"
+                value={databaseDetails.password}
+                onChange={(e) => setDatabaseDetails({ ...databaseDetails, password: e.target.value })}
+              />
+              <input
+                type="text"
+                placeholder="Database"
+                className="border p-2 w-full mb-4 rounded"
+                value={databaseDetails.database}
+                onChange={(e) => setDatabaseDetails({ ...databaseDetails, database: e.target.value })}
+              />
+              <button
+                className="bg-green-800 text-white px-4 py-2 rounded mr-2"
+                onClick={connectDatabase}
+              >
+                Connect Database
+              </button>
+              <button
+                className="bg-gray-300 text-black px-4 py-2 rounded"
+                onClick={() => setIsConnectingDatabase(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          ) : isCreatingRoute ? (
             <div className="bg-white p-5 rounded shadow-lg">
               <h2 className="text-lg font-bold mb-4">Create New Route</h2>
               <select
                 className="border p-2 w-full mb-4 rounded"
                 value={newRoute.method}
-                onChange={(e) =>
-                  setNewRoute({ ...newRoute, method: e.target.value })
-                }
+                onChange={(e) => setNewRoute({ ...newRoute, method: e.target.value })}
               >
                 <option value="GET">GET</option>
                 <option value="POST">POST</option>
@@ -169,23 +265,19 @@ function App() {
                 placeholder="Endpoint"
                 className="border p-2 w-full mb-4 rounded"
                 value={newRoute.endpoint}
-                onChange={(e) =>
-                  setNewRoute({ ...newRoute, endpoint: e.target.value })
-                }
+                onChange={(e) => setNewRoute({ ...newRoute, endpoint: e.target.value })}
               />
               <textarea
                 placeholder="Expected Response (JSON)"
-                className="border h-[250px] p-2 w-full mb-4 rounded"
+                className="border p-2 w-full mb-4 rounded"
                 value={newRoute.response}
-                onChange={(e) =>
-                  setNewRoute({ ...newRoute, response: e.target.value })
-                }
+                onChange={(e) => setNewRoute({ ...newRoute, response: e.target.value })}
               />
               <button
                 className="bg-green-800 text-white px-4 py-2 rounded mr-2"
                 onClick={createRoute}
               >
-                Create
+                Create Route
               </button>
               <button
                 className="bg-gray-300 text-black px-4 py-2 rounded"
@@ -194,28 +286,29 @@ function App() {
                 Cancel
               </button>
             </div>
-          ) : (
-            selectedEndpoint && (
-              <div className="bg-white p-5 rounded shadow-lg">
-                <h2 className="text-lg font-bold mb-4">Endpoint Details</h2>
-                <p><strong>Method:</strong> {selectedEndpoint.method}</p>
-                <p><strong>Endpoint Name:</strong> {selectedEndpoint.endpoint_name}</p>
-                <p><strong>Endpoint Link:</strong>
-                  <a href={`https://builder-nz8k.onrender.com/2345/${selectedProject.project_name}/${selectedEndpoint.endpoint_name}`} target="_blank" rel="noopener noreferrer" className='pl-2'>
+          ) : selectedEndpoint ? (
+            <div className="bg-white p-5 rounded shadow-lg">
+              <h2 className="text-lg font-bold mb-4">Endpoint Details</h2>
+              <p><strong>Method:</strong> {selectedEndpoint.method}</p>
+              <p><strong>Endpoint Name:</strong> {selectedEndpoint.endpoint_name}</p>
+              <p><strong>Endpoint Link:</strong>
+                <a href={`https://builder-nz8k.onrender.com/2345/${selectedProject.project_name}/${selectedEndpoint.endpoint_name}`} target="_blank" rel="noopener noreferrer" className='pl-2'>
                   {`https://builder-nz8k.onrender.com/2345/${selectedProject.project_name}/${selectedEndpoint.endpoint_name}`}
-                  </a>
-                </p>
-              </div>
-            )
+                </a>
+              </p>
+            </div>
+          ) : (
+            <div className="bg-white p-5 rounded shadow-lg">
+              <h2 className="text-lg font-bold">No Route Selected</h2>
+            </div>
           )}
         </div>
-      </div>
+      </div >
 
-      {/* Modal for Creating Project */}
       {isCreatingProject && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded shadow-lg w-1/3">
-            <h2 className="text-lg font-bold mb-4">Create New Project</h2>
+          <div className="bg-white p-8 rounded shadow-lg">
+            <h2 className="text-xl font-bold mb-4">Create New Project</h2>
             <input
               type="text"
               placeholder="Project Name"
@@ -223,18 +316,22 @@ function App() {
               value={newProjectName}
               onChange={(e) => setNewProjectName(e.target.value)}
             />
-            <div className="flex justify-end">
-              <button className="bg-gray-300 text-black px-4 py-2 rounded mr-2" onClick={() => setIsCreatingProject(false)}>
-                Cancel
-              </button>
-              <button className="bg-green-600 text-white px-4 py-2 rounded" onClick={createProject}>
-                Create
-              </button>
-            </div>
+            <button
+              className="bg-green-800 text-white px-4 py-2 rounded mr-2"
+              onClick={createProject}
+            >
+              Create
+            </button>
+            <button
+              className="bg-gray-300 text-black px-4 py-2 rounded"
+              onClick={() => setIsCreatingProject(false)}
+            >
+              Cancel
+            </button>
           </div>
         </div>
-      )}
-      
+      )
+      }
     </>
   );
 }

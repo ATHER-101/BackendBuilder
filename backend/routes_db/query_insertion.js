@@ -4,14 +4,17 @@ const { Pool } = require('pg');
 
 // Database connection pool configuration
 const pool = new Pool({
-    host: 'localhost',
+    host: 'ep-jolly-glitter-a40z54ab.us-east-1.aws.neon.tech',
     port: 5432,
-    user: 'postgres',
-    password: 'G4Z1,-/j>[4i',
-    database: 'postgres',
+    user: 'neondb_owner',
+    password: 'Rhm5pKdjblE3',
+    database: 'neondb',
     max: 20, // Maximum number of clients in the pool
     idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
     connectionTimeoutMillis: 2000, // Return an error after 2 seconds if no connection is available
+    ssl: {
+        rejectUnauthorized: false,
+    },
 });
 
 // Route to insert data into a table dynamically
