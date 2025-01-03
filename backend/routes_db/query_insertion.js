@@ -59,3 +59,31 @@ router.get('/', async (req, res) => { // Change GET to POST
 });
 
 module.exports = router;
+
+
+// Given the following specifications, generate an Express.js route handler:
+
+// {
+//   "endpoint_name": "set-user",
+//   "method": "post"
+// }
+
+// The generated code should create an endpoint with specified method at specified route that inserts the given data (multiple rows) through request body in table 'test' get the columns of the table from the database table in pgsql database with details:
+// {
+//     host: "ep-jolly-glitter-a40z54ab.us-east-1.aws.neon.tech",
+//     port: 5432,
+//     user: "neondb_owner",
+//     password: "Rhm5pKdjblE3",
+//     database: "neondb",
+//     ssl: {
+//         rejectUnauthorized: false,
+//     },
+//   }
+
+// And make sure to put the const pool inside the route handler. 
+// Make sure to give only code snippet. Make sure you give only the route handler and not the imports or exports to fit into this code snippet: 
+
+// const express = require('express');
+// const router = express.Router();
+
+// module.exports = router;

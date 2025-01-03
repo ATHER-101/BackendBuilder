@@ -76,7 +76,7 @@ app.use('/${userName}/${fileName.slice(0, -3)}', routes_${userName}_${fileName.s
     try {
         await git.add([filePath, path.join(fullPath, 'index.js')]);
         await git.commit('Added new project');
-        await git.push('origin', 'main'); // Replace 'main' with your branch name if it's different
+        await git.push('origin', 'main');
         console.log('Changes pushed to GitHub successfully.');
     } catch (gitError) {
         console.error("Error pushing changes to GitHub:", gitError);

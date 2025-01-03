@@ -15,6 +15,8 @@ const connect_db = require('./routes_db/connect_db');
 const make_table = require('./routes_db/query_generator');
 const query_extractor = require('./routes_db/query_extractor');
 const query_insertion = require('./routes_db/query_insertion');
+const insert_db = require('./routes_db/insert_db');
+const extract_db = require('./routes_db/extract_db');
 
 
 app.use('/add-endpoint',endpoint);
@@ -22,6 +24,8 @@ app.use('/add-project',project);
 app.use('/add-user',user);
 app.use('/data',data);
 app.use('/connect-db', connect_db);
+app.use('/insert-db', insert_db);
+app.use('/extract-db', extract_db);
 app.use('/make-table', make_table);
 app.use('/extractor', query_extractor);
 app.use('/insertion', query_insertion);
