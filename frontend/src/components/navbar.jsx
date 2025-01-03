@@ -1,7 +1,8 @@
 // Navbar.js
 import React, { useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 
-const Navbar = ({ selectedProject, projects, dropdownOpen, setDropdownOpen, setSelectedProject, setIsCreatingProject }) => {
+const Navbar = ({ selectedProject, projects, dropdownOpen, setDropdownOpen, setSelectedProject, setIsCreatingProject, setSelectedEndpoint }) => {
   const dropdownRef = useRef(null);
 
   const handleClickOutside = (event) => {
@@ -18,7 +19,7 @@ const Navbar = ({ selectedProject, projects, dropdownOpen, setDropdownOpen, setS
   }, []);
 
   return (
-    <nav className="bg-white shadow-lg py-2 px-6 flex justify-between items-center">
+    <nav className="bg-white shadow-lg py-2 px-6 flex justify-between items-center z-999">
       <div className="text-xl font-bold text-green-600">BackendBuddy.</div>
       <div className="relative" ref={dropdownRef}>
         <button
@@ -33,16 +34,19 @@ const Navbar = ({ selectedProject, projects, dropdownOpen, setDropdownOpen, setS
           <div className="absolute right-0 mt-1 p-2 bg-white rounded shadow-lg z-10 w-64">
             <ul className="max-h-48 overflow-auto">
               {projects.map((project, index) => (
-                <li
-                  key={index}
-                  className="p-2 hover:bg-green-200 cursor-pointer"
-                  onClick={() => {
-                    setSelectedProject(project);
-                    setDropdownOpen(false);
-                  }}
-                >
-                  {project.project_name}
-                </li>
+                <Link to='/'
+                  key={index}>
+                  <li
+                    className="p-2 hover:bg-green-200 cursor-pointer"
+                    onClick={() => {
+                      setSelectedProject(project);
+                      setSelectedEndpoint(project.endpoints[0])
+                      setDropdownOpen(false);
+                    }}
+                  >
+                    {project.project_name}
+                  </li>
+                </Link>
               ))}
             </ul>
             <button
